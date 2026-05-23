@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OptiBottle · Sistema de Optimización de Producción</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #0f1e3d;
+    --azul-claro: #2563eb;
+    --cyan: #06b6d4;
+    --amarillo: #fbbf24;
+    --rojo: #dc2626;
+    --verde: #10b981;
+    --crema: #f5f1e8;
+    --negro: #0a0e1a;
+    --gris-borde: #e2e8f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Archivo', sans-serif;
+    background: var(--crema);
+    color: var(--negro);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ============ NAV ============ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(15, 30, 61, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 16px 40px;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  nav .logo {
+    font-family: 'Space Mono', monospace;
+    color: var(--crema);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+  }
+  nav .logo span { color: var(--amarillo); }
+
+  nav ul {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  nav a {
+    color: var(--crema);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--amarillo); }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: 100vh;
+    background: var(--azul);
+    color: var(--crema);
+    padding: 120px 40px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--amarillo);
+    padding: 8px 16px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 100px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+  .hero-tag .dot {
+    width: 8px; height: 8px;
+    background: var(--amarillo);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .hero h1 {
+    font-size: clamp(48px, 7vw, 96px);
+    line-height: 0.95;
+    font-weight: 900;
+    letter-spacing: -3px;
+    margin-bottom: 24px;
+  }
+  .hero h1 .highlight {
+    color: var(--amarillo);
+    font-style: italic;
+    display: block;
+  }
+
+  .hero p.lead {
+    font-size: 20px;
+    color: rgba(245, 241, 232, 0.7);
+    margin-bottom: 32px;
+    max-width: 500px;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 16px 28px;
+    border-radius: 6px;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--amarillo);
+    color: var(--azul);
+  }
+  .btn-primary:hover {
+    background: var(--crema);
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--crema);
+    border-color: var(--crema);
+  }
+  .btn-secondary:hover {
+    background: var(--crema);
+    color: var(--azul);
+  }
+
+  /* ============ DASHBOARD MOCKUP ============ */
+  .mockup {
+    background: var(--negro);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    position: relative;
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+  }
+  .mockup-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .mockup-bar span {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #4a5568;
+  }
+  .mockup-bar span:nth-child(1) { background: #ef4444; }
+  .mockup-bar span:nth-child(2) { background: #f59e0b; }
+  .mockup-bar span:nth-child(3) { background: #10b981; }
+
+  .mockup-title {
+    color: var(--crema);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .kpi-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .kpi-label {
+    font-size: 9px;
+    color: rgba(245,241,232,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .kpi-value.green { color: var(--verde); }
+  .kpi-value.yellow { color: var(--amarillo); }
+  .kpi-value.cyan { color: var(--cyan); }
+  .kpi-value.red { color: var(--rojo); }
+
+  .mini-chart {
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    padding: 10px;
+    height: 90px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .bar {
+    flex: 1;
+    background: linear-gradient(180deg, var(--cyan), var(--azul-claro));
+    border-radius: 2px 2px 0 0;
+    animation: grow 1s ease-out;
+  }
+  @keyframes grow {
+    from { height: 0; }
+  }
+
+  /* ============ SECCIONES ============ */
+  section {
+    padding: 100px 40px;
+    position: relative;
+  }
+  .container {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--azul-claro);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 24px;
+    max-width: 800px;
+  }
+  .section-subtitle {
+    font-size: 18px;
+    color: #475569;
+    max-width: 600px;
+    margin-bottom: 60px;
+  }
+
+  /* ============ PROBLEMA/SOLUCIÓN ============ */
+  .ps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .ps-card {
+    background: white;
+    border: 2px solid var(--gris-borde);
+    border-radius: 12px;
+    padding: 40px;
+    transition: all 0.3s;
+  }
+  .ps-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  }
+  .ps-card.problema {
+    border-top: 6px solid var(--rojo);
+  }
+  .ps-card.solucion {
+    border-top: 6px solid var(--verde);
+    background: var(--azul);
+    color: var(--crema);
+    border-color: var(--azul);
+  }
+  .ps-card h3 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .ps-card ul {
+    list-style: none;
+  }
+  .ps-card li {
+    padding: 10px 0;
+    padding-left: 28px;
+    position: relative;
+    font-size: 15px;
+  }
+  .ps-card.problema li::before {
+    content: "✕";
+    position: absolute;
+    left: 0;
+    color: var(--rojo);
+    font-weight: 900;
+  }
+  .ps-card.solucion li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--verde);
+    font-weight: 900;
+  }
+
+  /* ============ FEATURES ============ */
+  .features {
+    background: white;
+    border-top: 1px solid var(--gris-borde);
+    border-bottom: 1px solid var(--gris-borde);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--gris-borde);
+    border-left: 1px solid var(--gris-borde);
+  }
+  .feature {
+    padding: 40px 30px;
+    border-right: 1px solid var(--gris-borde);
+    border-bottom: 1px solid var(--gris-borde);
+    transition: background 0.2s;
+  }
+  .feature:hover {
+    background: var(--crema);
+  }
+  .feature-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--azul-claro);
+    margin-bottom: 16px;
+  }
+  .feature-icon {
+    font-size: 36px;
+    margin-bottom: 16px;
+  }
+  .feature h4 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .feature p {
+    font-size: 14px;
+    color: #64748b;
+  }
+
+  /* ============ MANUALES ============ */
+  .manuales {
+    background: var(--negro);
+    color: var(--crema);
+  }
+  .manuales .section-tag { color: var(--amarillo); }
+  .manuales .section-subtitle { color: rgba(245,241,232,0.6); }
+
+  .manuales-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .manual-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 32px;
+    transition: all 0.3s;
+  }
+  .manual-card:hover {
+    background: rgba(251, 191, 36, 0.05);
+    border-color: var(--amarillo);
+    transform: translateY(-4px);
+  }
+  .manual-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+  }
+  .manual-card h3 {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .manual-card p {
+    color: rgba(245,241,232,0.6);
+    font-size: 14px;
+    margin-bottom: 20px;
+    min-height: 60px;
+  }
+  .manual-links {
+    display: flex;
+    gap: 8px;
+  }
+  .manual-btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+  .manual-btn.view {
+    background: var(--amarillo);
+    color: var(--azul);
+  }
+  .manual-btn.view:hover {
+    background: var(--crema);
+  }
+  .manual-btn.download {
+    background: transparent;
+    color: var(--crema);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .manual-btn.download:hover {
+    border-color: var(--crema);
+  }
+
+  /* ============ STACK ============ */
+  .stack {
+    background: var(--crema);
+  }
+  .stack-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .stack-item {
+    background: white;
+    border: 1px solid var(--gris-borde);
+    border-radius: 100px;
+    padding: 10px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--azul);
+    font-weight: 700;
+  }
+  .stack-item.highlight {
+    background: var(--azul);
+    color: var(--amarillo);
+    border-color: var(--azul);
+  }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--negro);
+    color: var(--crema);
+    padding: 60px 40px 30px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .footer-content {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+  }
+  footer h5 {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--amarillo);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  footer p, footer a {
+    color: rgba(245,241,232,0.6);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.8;
+    display: block;
+  }
+  footer a:hover { color: var(--amarillo); }
+  .footer-bottom {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    font-size: 12px;
+    color: rgba(245,241,232,0.4);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    nav ul { display: none; }
+    .hero { padding: 100px 20px 40px; }
+    .hero-content { grid-template-columns: 1fr; gap: 40px; }
+    .mockup { transform: none; }
+    section { padding: 60px 20px; }
+    .ps-grid { grid-template-columns: 1fr; }
+    .footer-content { grid-template-columns: 1fr; gap: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Opti<span>Bottle</span> <span style="opacity:0.5">/</span> <span style="opacity:0.5;font-size:13px">EQUIPO 2</span></div>
+  <ul>
+    <li><a href="#problema">Problema</a></li>
+    <li><a href="#features">Sistema</a></li>
+    <li><a href="#manuales">Manuales</a></li>
+    <li><a href="#stack">Stack</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-content">
+    <div>
+      <div class="hero-tag"><span class="dot"></span> SISTEMAS DE INFORMACIÓN · PIA 2026</div>
+      <h1>
+        Optimiza tu<br>
+        línea de<br>
+        producción.<br>
+        <span class="highlight">Sin caos.</span>
+      </h1>
+      <p class="lead">
+        Sistema de información para gestionar órdenes, inventario y métricas
+        de producción en una fábrica mediana de botellas plásticas.
+      </p>
+      <div class="cta-buttons">
+        <a href="#manuales" class="btn btn-primary">
+          📄 Ver Manuales
+        </a>
+        <a href="https://github.com/" class="btn btn-secondary" id="github-link">
+          ⌨️ Código en GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- Dashboard mockup -->
+    <div class="mockup">
+      <div class="mockup-bar">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="mockup-title">OPTIBOTTLE.DB :: DASHBOARD</div>
+      <div class="kpis">
+        <div class="kpi-card">
+          <div class="kpi-label">Unidades Buenas</div>
+          <div class="kpi-value green">63,100</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">% Desperdicio</div>
+          <div class="kpi-value red">3.29%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Eficiencia</div>
+          <div class="kpi-value cyan">96.71%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tiempo Muerto</div>
+          <div class="kpi-value yellow">280min</div>
+        </div>
+      </div>
+      <div class="mini-chart">
+        <div class="bar" style="height: 60%"></div>
+        <div class="bar" style="height: 80%"></div>
+        <div class="bar" style="height: 45%"></div>
+        <div class="bar" style="height: 90%"></div>
+        <div class="bar" style="height: 70%"></div>
+        <div class="bar" style="height: 85%"></div>
+        <div class="bar" style="height: 95%"></div>
+        <div class="bar" style="height: 75%"></div>
+        <div class="bar" style="height: 65%"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- PROBLEMA / SOLUCIÓN -->
+<section id="problema">
+  <div class="container">
+    <div class="section-tag">// EL PROBLEMA</div>
+    <h2 class="section-title">Datos dispersos, decisiones a ciegas.</h2>
+    <p class="section-subtitle">
+      En plantas medianas, la producción se anota en hojas de papel o se pierde entre turnos.
+      Sin información, no hay optimización.
+    </p>
+    <div class="ps-grid">
+      <div class="ps-card problema">
+        <h3>Sin sistema</h3>
+        <ul>
+          <li>Capturas manuales en libretas</li>
+          <li>Imposible calcular desperdicio real</li>
+          <li>No se identifican causas de paro</li>
+          <li>Inventario sin control</li>
+          <li>Decisiones basadas en intuición</li>
+        </ul>
+      </div>
+      <div class="ps-card solucion">
+        <h3>Con OptiBottle</h3>
+        <ul>
+          <li>Captura digital por turno</li>
+          <li>KPIs en tiempo real</li>
+          <li>Análisis de causas de tiempo muerto</li>
+          <li>Alertas de stock mínimo</li>
+          <li>Decisiones basadas en datos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container" style="padding: 0 0 0 0;">
+    <div style="padding: 0 0 60px;">
+      <div class="section-tag">// MÓDULOS DEL SISTEMA</div>
+      <h2 class="section-title">Cuatro pestañas. Control total.</h2>
+    </div>
+  </div>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="feature-num">01 — DASHBOARD</div>
+      <div class="feature-icon">📊</div>
+      <h4>Indicadores en vivo</h4>
+      <p>Unidades buenas, defectuosas, porcentaje de desperdicio, eficiencia y tiempo muerto acumulado.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">02 — ÓRDENES</div>
+      <div class="feature-icon">📋</div>
+      <h4>Gestión de producción</h4>
+      <p>Crear órdenes, cambiar estados, asignar responsables. Exporta a CSV para reportes.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">03 — INVENTARIO</div>
+      <div class="feature-icon">📦</div>
+      <h4>Materia prima</h4>
+      <p>Control de stock con alertas automáticas cuando un material baja del mínimo.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">04 — REGISTRO</div>
+      <div class="feature-icon">✏️</div>
+      <h4>Captura por turno</h4>
+      <p>Anota lo producido cada turno: buenas, defectuosas, tiempo muerto y causas de paro.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MANUALES -->
+<section class="manuales" id="manuales">
+  <div class="container">
+    <div class="section-tag">// DOCUMENTACIÓN</div>
+    <h2 class="section-title">Manuales del proyecto.</h2>
+    <p class="section-subtitle">
+      Toda la documentación técnica y de usuario, lista para consultar o descargar.
+    </p>
+    <div class="manuales-grid">
+      <div class="manual-card">
+        <div class="manual-icon">📘</div>
+        <h3>Manual Técnico</h3>
+        <p>Arquitectura, modelo de datos, módulos, fórmulas, pruebas y guía de mantenimiento.</p>
+        <div class="manual-links">
+          <a href="manual-tecnico.html" class="manual-btn view">Ver →</a>
+          <a href="manuales/optibottle_Manual_Tecnico.pdf" download class="manual-btn download">↓ PDF</a>
+        </div>
+      </div>
+      <div class="manual-card">
+        <div class="manual-icon">📗</div>
+        <h3>Manual de Usuario</h3>
+        <p>Guía paso a paso para operadores y supervisores. Sin tecnicismos.</p>
+        <div class="manual-links">
+          <a href="manual-usuario.html" class="manual-btn view">Ver →</a>
+          <a href="manuales/optibottle_Manual_Usuario.pdf" download class="manual-btn download">↓ PDF</a>
+        </div>
+      </div>
+      <div class="manual-card">
+        <div class="manual-icon">🎬</div>
+        <h3>Guion del Video</h3>
+        <p>Script completo escena por escena para grabar la demostración del sistema.</p>
+        <div class="manual-links">
+          <a href="guion-video.html" class="manual-btn view">Ver →</a>
+          <a href="manuales/optibottle_Guion_Video.pdf" download class="manual-btn download">↓ PDF</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section class="stack" id="stack">
+  <div class="container">
+    <div class="section-tag">// TECNOLOGÍAS</div>
+    <h2 class="section-title">Stack simple. Resultados sólidos.</h2>
+    <p class="section-subtitle">
+      Construido únicamente con tecnologías nativas de Python. Cero dependencias externas para mayor portabilidad.
+    </p>
+    <div class="stack-list">
+      <div class="stack-item highlight">Python 3.8+</div>
+      <div class="stack-item">Tkinter / ttk</div>
+      <div class="stack-item">SQLite</div>
+      <div class="stack-item">unittest</div>
+      <div class="stack-item">CSV export</div>
+      <div class="stack-item">ReportLab</div>
+    </div>
+
+    <div style="margin-top: 80px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px;">
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 48px; font-weight: 700; color: var(--azul-claro);">11/11</div>
+        <div style="font-size: 14px; color: #64748b; margin-top: 4px;">Pruebas pasadas</div>
+      </div>
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 48px; font-weight: 700; color: var(--azul-claro);">0</div>
+        <div style="font-size: 14px; color: #64748b; margin-top: 4px;">Dependencias externas</div>
+      </div>
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 48px; font-weight: 700; color: var(--azul-claro);">3</div>
+        <div style="font-size: 14px; color: #64748b; margin-top: 4px;">Tablas en BD</div>
+      </div>
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 48px; font-weight: 700; color: var(--azul-claro);">4</div>
+        <div style="font-size: 14px; color: #64748b; margin-top: 4px;">Módulos funcionales</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-content">
+    <div>
+      <h5>OptiBottle</h5>
+      <p>Sistema de información para la optimización de la producción de botellas plásticas. Proyecto Integrador de Aprendizaje desarrollado para la unidad de Sistemas de Información.</p>
+    </div>
+    <div>
+      <h5>Documentación</h5>
+      <a href="manual-tecnico.html">Manual Técnico</a>
+      <a href="manual-usuario.html">Manual de Usuario</a>
+      <a href="guion-video.html">Guion del Video</a>
+    </div>
+    <div>
+      <h5>Proyecto</h5>
+      <a href="https://github.com/" id="github-link2">Repositorio</a>
+      <a href="#features">Funcionalidades</a>
+      <a href="#stack">Stack</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    EQUIPO 2 · SISTEMAS DE INFORMACIÓN · PIA 2026
+  </div>
+</footer>
+
+</body>
+</html>

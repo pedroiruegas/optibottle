@@ -1,0 +1,27 @@
+# Base de datos generada
+data/*.db
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Exportaciones generadas
+exports/*.csv
+exports/*.pdf

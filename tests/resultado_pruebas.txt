@@ -1,0 +1,27 @@
+test_actualizar_estado_orden (tests.test_database.TestDatabase.test_actualizar_estado_orden)
+El estado de una orden debe poder cambiar. ... ok
+test_actualizar_stock (tests.test_database.TestDatabase.test_actualizar_stock)
+El stock debe actualizarse correctamente. ... ok
+test_agregar_material (tests.test_database.TestDatabase.test_agregar_material)
+Debe agregar un material correctamente. ... ok
+test_calcular_metricas (tests.test_database.TestDatabase.test_calcular_metricas)
+Las métricas deben calcularse correctamente. ... ok
+test_causas_paro_frecuentes (tests.test_database.TestDatabase.test_causas_paro_frecuentes)
+Debe agregar y ordenar las causas por tiempo total. ... ok
+test_crear_orden (tests.test_database.TestDatabase.test_crear_orden)
+Debe crear una orden de producción. ... ok
+test_eliminar_material (tests.test_database.TestDatabase.test_eliminar_material)
+Debe eliminar un material existente. ... ok
+test_eliminar_orden_borra_registros (tests.test_database.TestDatabase.test_eliminar_orden_borra_registros)
+Al eliminar una orden, sus registros deben eliminarse también. ... ok
+test_materiales_bajo_minimo (tests.test_database.TestDatabase.test_materiales_bajo_minimo)
+Debe detectar materiales con stock por debajo del mínimo. ... ok
+test_metricas_sin_datos (tests.test_database.TestDatabase.test_metricas_sin_datos)
+Sin registros, las métricas deben dar 0 sin errores. ... ok
+test_registrar_produccion (tests.test_database.TestDatabase.test_registrar_produccion)
+Debe registrar la producción y actualizar la cantidad producida. ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.223s
+
+OK
