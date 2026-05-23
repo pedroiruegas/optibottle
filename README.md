@@ -9,7 +9,7 @@
 
 **Proyecto Integrador de Aprendizaje (PIA)** | Sistemas de Información | Equipo 2
 
-🌐 **[Ver sitio web del proyecto →](https://TU_USUARIO.github.io/optibottle/)**
+🌐 **[Ver sitio web del proyecto →](https://pedroiruegas.github.io/optibottle/)**
 
 ---
 
@@ -70,7 +70,7 @@ En una planta mediana de producción de botellas plásticas, cada turno genera c
 ### Pasos
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/TU_USUARIO/optibottle.git
+git clone https://github.com/pedroiruegas/optibottle.git
 cd optibottle
 
 # 2. (Opcional) Cargar datos de ejemplo
@@ -90,7 +90,7 @@ python src/main.py
 
 ## 📚 Documentación
 
-Toda la documentación está disponible en **[el sitio web del proyecto](https://TU_USUARIO.github.io/optibottle/)** o descarga los PDFs directamente:
+Toda la documentación está disponible en **[el sitio web del proyecto](https://pedroiruegas.github.io/optibottle/)** o descarga los PDFs directamente:
 
 - 📘 [**Manual Técnico**](docs/manuales/optibottle_Manual_Tecnico.pdf) — Arquitectura, modelo de datos, módulos, fórmulas y pruebas
 - 📗 [**Manual de Usuario**](docs/manuales/optibottle_Manual_Usuario.pdf) — Guía paso a paso para operadores y supervisores
