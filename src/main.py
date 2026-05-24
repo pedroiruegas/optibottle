@@ -11,6 +11,12 @@ import csv
 import os
 import sys
 
+# Matplotlib para gráficas embebidas
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 # Permitir importar desde la misma carpeta
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from database import Database
@@ -129,11 +135,35 @@ class OptiBottleApp:
 
     # ==================== DASHBOARD ====================
     def _construir_dashboard(self):
-        contenedor = tk.Frame(self.tab_dashboard, bg=self.COLOR_FONDO)
-        contenedor.pack(fill="both", expand=True, padx=20, pady=20)
+        # Contenedor con scroll (porque ahora hay gráficas)
+        canvas_dash = tk.Canvas(self.tab_dashboard, bg=self.COLOR_FONDO, highlightthickness=0)
+        scrollbar_dash = ttk.Scrollbar(self.tab_dashboard, orient="vertical", command=canvas_dash.yview)
+        canvas_dash.configure(yscrollcommand=scrollbar_dash.set)
+
+        scrollbar_dash.pack(side="right", fill="y")
+        canvas_dash.pack(side="left", fill="both", expand=True)
+
+        contenedor = tk.Frame(canvas_dash, bg=self.COLOR_FONDO)
+        canvas_window = canvas_dash.create_window((0, 0), window=contenedor, anchor="nw")
+
+        def ajustar_ancho(event):
+            canvas_dash.itemconfig(canvas_window, width=event.width)
+        canvas_dash.bind("<Configure>", ajustar_ancho)
+
+        def actualizar_scroll(event):
+            canvas_dash.configure(scrollregion=canvas_dash.bbox("all"))
+        contenedor.bind("<Configure>", actualizar_scroll)
+
+        # Scroll con la rueda del ratón
+        def _on_mousewheel(event):
+            canvas_dash.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        canvas_dash.bind_all("<MouseWheel>", _on_mousewheel)
+
+        contenido = tk.Frame(contenedor, bg=self.COLOR_FONDO)
+        contenido.pack(fill="both", expand=True, padx=20, pady=20)
 
         tk.Label(
-            contenedor,
+            contenido,
             text="Indicadores Clave de Producción",
             font=("Segoe UI", 16, "bold"),
             bg=self.COLOR_FONDO,
@@ -141,7 +171,7 @@ class OptiBottleApp:
         ).pack(anchor="w", pady=(0, 15))
 
         # KPIs en tarjetas
-        kpis_frame = tk.Frame(contenedor, bg=self.COLOR_FONDO)
+        kpis_frame = tk.Frame(contenido, bg=self.COLOR_FONDO)
         kpis_frame.pack(fill="x")
 
         self.kpi_labels = {}
@@ -158,56 +188,77 @@ class OptiBottleApp:
             card.grid(row=0, column=i, padx=8, pady=5, sticky="nsew", ipadx=10, ipady=10)
             kpis_frame.columnconfigure(i, weight=1)
 
-            # Barra superior de color
             tk.Frame(card, bg=color, height=4).pack(fill="x")
 
-            tk.Label(
-                card,
-                text=icono,
-                font=("Segoe UI", 22),
-                bg="white",
-            ).pack(pady=(10, 0))
-
-            valor_lbl = tk.Label(
-                card,
-                text=valor,
-                font=("Segoe UI", 20, "bold"),
-                bg="white",
-                fg=color,
-            )
+            tk.Label(card, text=icono, font=("Segoe UI", 22), bg="white").pack(pady=(10, 0))
+            valor_lbl = tk.Label(card, text=valor, font=("Segoe UI", 20, "bold"), bg="white", fg=color)
             valor_lbl.pack()
-
-            tk.Label(
-                card,
-                text=titulo,
-                font=("Segoe UI", 9),
-                bg="white",
-                fg="#64748b",
-            ).pack(pady=(0, 10))
-
+            tk.Label(card, text=titulo, font=("Segoe UI", 9), bg="white", fg="#64748b").pack(pady=(0, 10))
             self.kpi_labels[titulo] = valor_lbl
+
+        # ========== SECCIÓN DE GRÁFICAS ==========
+        tk.Label(
+            contenido,
+            text="📈 Análisis Gráfico de la Producción",
+            font=("Segoe UI", 14, "bold"),
+            bg=self.COLOR_FONDO,
+            fg=self.COLOR_TEXTO,
+        ).pack(anchor="w", pady=(25, 10))
+
+        graficas_frame = tk.Frame(contenido, bg=self.COLOR_FONDO)
+        graficas_frame.pack(fill="x")
+
+        # Gráfica 1: Barras (buenas vs defectuosas por orden)
+        frame_g1 = tk.Frame(graficas_frame, bg="white", bd=1, relief="solid")
+        frame_g1.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.fig_barras = Figure(figsize=(5, 3.2), dpi=80, facecolor="white")
+        self.ax_barras = self.fig_barras.add_subplot(111)
+        self.canvas_barras = FigureCanvasTkAgg(self.fig_barras, master=frame_g1)
+        self.canvas_barras.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Gráfica 2: Pastel (causas de tiempo muerto)
+        frame_g2 = tk.Frame(graficas_frame, bg="white", bd=1, relief="solid")
+        frame_g2.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+
+        self.fig_pastel = Figure(figsize=(5, 3.2), dpi=80, facecolor="white")
+        self.ax_pastel = self.fig_pastel.add_subplot(111)
+        self.canvas_pastel = FigureCanvasTkAgg(self.fig_pastel, master=frame_g2)
+        self.canvas_pastel.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Gráfica 3: Líneas (producción por día) - ancho completo
+        frame_g3 = tk.Frame(graficas_frame, bg="white", bd=1, relief="solid")
+        frame_g3.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+
+        self.fig_lineas = Figure(figsize=(10, 3), dpi=80, facecolor="white")
+        self.ax_lineas = self.fig_lineas.add_subplot(111)
+        self.canvas_lineas = FigureCanvasTkAgg(self.fig_lineas, master=frame_g3)
+        self.canvas_lineas.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
+
+        graficas_frame.columnconfigure(0, weight=1)
+        graficas_frame.columnconfigure(1, weight=1)
 
         # Sección causas de paro
         tk.Label(
-            contenedor,
+            contenido,
             text="🔧 Principales Causas de Tiempo Muerto",
             font=("Segoe UI", 13, "bold"),
             bg=self.COLOR_FONDO,
             fg=self.COLOR_TEXTO,
         ).pack(anchor="w", pady=(25, 10))
 
-        frame_causas = tk.Frame(contenedor, bg="white", bd=1, relief="solid")
+        frame_causas = tk.Frame(contenido, bg="white", bd=1, relief="solid")
         frame_causas.pack(fill="both", expand=True)
 
         cols = ("Causa", "Minutos Totales", "Ocurrencias")
-        self.tree_causas = ttk.Treeview(frame_causas, columns=cols, show="headings", height=8)
+        self.tree_causas = ttk.Treeview(frame_causas, columns=cols, show="headings", height=6)
         for c in cols:
             self.tree_causas.heading(c, text=c)
             self.tree_causas.column(c, anchor="center")
         self.tree_causas.pack(fill="both", expand=True, padx=5, pady=5)
 
         # Alertas
-        self.frame_alertas = tk.Frame(contenedor, bg=self.COLOR_FONDO)
+        self.frame_alertas = tk.Frame(contenido, bg=self.COLOR_FONDO)
         self.frame_alertas.pack(fill="x", pady=10)
 
     def _refrescar_dashboard(self):
@@ -242,6 +293,112 @@ class OptiBottleApp:
                 fg="#92400e",
                 anchor="w",
             ).pack(fill="x", padx=10, pady=8)
+
+        # Actualizar gráficas
+        self._dibujar_graficas()
+
+    def _dibujar_graficas(self):
+        """Dibuja las 3 gráficas del dashboard con datos de la BD."""
+
+        # ===== GRÁFICA 1: Barras (buenas vs defectuosas por orden) =====
+        self.ax_barras.clear()
+        datos_orden = self.db.produccion_por_orden()
+
+        if datos_orden:
+            codigos = [d["codigo"] for d in datos_orden]
+            buenas = [d["buenas"] for d in datos_orden]
+            defectuosas = [d["defectuosas"] for d in datos_orden]
+
+            import numpy as np
+            x = np.arange(len(codigos))
+            ancho = 0.35
+
+            self.ax_barras.bar(x - ancho/2, buenas, ancho, label="Buenas",
+                               color=self.COLOR_EXITO, edgecolor="white")
+            self.ax_barras.bar(x + ancho/2, defectuosas, ancho, label="Defectuosas",
+                               color=self.COLOR_ALERTA, edgecolor="white")
+            self.ax_barras.set_xticks(x)
+            self.ax_barras.set_xticklabels(codigos, fontsize=8)
+            self.ax_barras.set_ylabel("Unidades", fontsize=9)
+            self.ax_barras.set_title("Producción por Orden", fontsize=11, fontweight="bold",
+                                     color=self.COLOR_PRIMARIO)
+            self.ax_barras.legend(fontsize=8, loc="upper right")
+            self.ax_barras.grid(axis="y", alpha=0.3, linestyle="--")
+            self.ax_barras.spines["top"].set_visible(False)
+            self.ax_barras.spines["right"].set_visible(False)
+        else:
+            self.ax_barras.text(0.5, 0.5, "Sin datos para mostrar",
+                                ha="center", va="center", fontsize=10, color="#94a3b8")
+            self.ax_barras.set_xticks([])
+            self.ax_barras.set_yticks([])
+
+        self.fig_barras.tight_layout()
+        self.canvas_barras.draw()
+
+        # ===== GRÁFICA 2: Pastel (causas de paro) =====
+        self.ax_pastel.clear()
+        causas = self.db.causas_paro_frecuentes()
+        # Filtrar "Sin paro" porque no aporta nada a la gráfica de causas
+        causas_filtradas = [c for c in causas if c["causa_paro"] != "Sin paro" and c["total_min"] > 0]
+
+        if causas_filtradas:
+            labels = [c["causa_paro"] for c in causas_filtradas]
+            sizes = [c["total_min"] for c in causas_filtradas]
+            colores = ["#dc2626", "#f59e0b", "#3b82f6", "#8b5cf6", "#10b981", "#ec4899", "#6366f1"]
+
+            wedges, texts, autotexts = self.ax_pastel.pie(
+                sizes, labels=labels, autopct="%1.1f%%",
+                colors=colores[:len(labels)], startangle=90,
+                textprops={"fontsize": 8},
+                wedgeprops={"edgecolor": "white", "linewidth": 2}
+            )
+            for autotext in autotexts:
+                autotext.set_color("white")
+                autotext.set_fontweight("bold")
+                autotext.set_fontsize(8)
+
+            self.ax_pastel.set_title("Distribución de Causas de Paro", fontsize=11,
+                                    fontweight="bold", color=self.COLOR_PRIMARIO)
+        else:
+            self.ax_pastel.text(0.5, 0.5, "Sin causas de paro registradas",
+                               ha="center", va="center", fontsize=10, color="#94a3b8")
+            self.ax_pastel.set_xticks([])
+            self.ax_pastel.set_yticks([])
+
+        self.fig_pastel.tight_layout()
+        self.canvas_pastel.draw()
+
+        # ===== GRÁFICA 3: Líneas (producción por día) =====
+        self.ax_lineas.clear()
+        datos_fecha = self.db.produccion_por_fecha()
+
+        if datos_fecha:
+            fechas = [d["fecha"] for d in datos_fecha]
+            buenas = [d["buenas"] for d in datos_fecha]
+            defectuosas = [d["defectuosas"] for d in datos_fecha]
+
+            self.ax_lineas.plot(fechas, buenas, marker="o", linewidth=2.5,
+                                color=self.COLOR_EXITO, label="Buenas", markersize=7)
+            self.ax_lineas.plot(fechas, defectuosas, marker="s", linewidth=2.5,
+                                color=self.COLOR_ALERTA, label="Defectuosas", markersize=7)
+            self.ax_lineas.fill_between(fechas, buenas, alpha=0.1, color=self.COLOR_EXITO)
+            self.ax_lineas.set_title("Tendencia de Producción Diaria", fontsize=11,
+                                    fontweight="bold", color=self.COLOR_PRIMARIO)
+            self.ax_lineas.set_ylabel("Unidades", fontsize=9)
+            self.ax_lineas.set_xlabel("Fecha", fontsize=9)
+            self.ax_lineas.legend(fontsize=9, loc="upper left")
+            self.ax_lineas.grid(alpha=0.3, linestyle="--")
+            self.ax_lineas.spines["top"].set_visible(False)
+            self.ax_lineas.spines["right"].set_visible(False)
+            self.ax_lineas.tick_params(axis="x", rotation=30, labelsize=8)
+        else:
+            self.ax_lineas.text(0.5, 0.5, "Sin datos para mostrar",
+                               ha="center", va="center", fontsize=10, color="#94a3b8")
+            self.ax_lineas.set_xticks([])
+            self.ax_lineas.set_yticks([])
+
+        self.fig_lineas.tight_layout()
+        self.canvas_lineas.draw()
 
     # ==================== TAB ÓRDENES ====================
     def _construir_tab_ordenes(self):

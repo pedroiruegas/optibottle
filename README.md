@@ -44,7 +44,7 @@ En una planta mediana de producción de botellas plásticas, cada turno genera c
 
 | Módulo | Descripción |
 |--------|-------------|
-| 📊 **Dashboard** | KPIs en vivo: unidades buenas/defectuosas, % desperdicio, eficiencia, tiempo muerto, causas de paro y alertas |
+| 📊 **Dashboard** | KPIs en vivo + 3 gráficas (barras, pastel, líneas), tabla de causas de paro y alertas de stock |
 | 📋 **Órdenes de Producción** | Alta, gestión de estados (Planeada/En Proceso/Pausada/Finalizada), exportación a CSV |
 | 📦 **Materia Prima** | Inventario con alertas automáticas de stock mínimo |
 | ✏️ **Registro de Producción** | Captura por turno con causas de paro |
@@ -56,9 +56,8 @@ En una planta mediana de producción de botellas plásticas, cada turno genera c
 - **Python 3.8+** — Lenguaje principal
 - **Tkinter/ttk** — Interfaz gráfica de escritorio (incluida en Python)
 - **SQLite** — Base de datos embebida (incluida en Python)
+- **Matplotlib** — Gráficas del dashboard (barras, pastel, líneas)
 - **unittest** — Pruebas unitarias (incluida en Python)
-
-> ✅ **Cero dependencias externas.** Todo viene incluido con Python.
 
 ---
 
@@ -73,10 +72,13 @@ En una planta mediana de producción de botellas plásticas, cada turno genera c
 git clone https://github.com/pedroiruegas/optibottle.git
 cd optibottle
 
-# 2. (Opcional) Cargar datos de ejemplo
+# 2. Instalar la única dependencia externa
+pip install matplotlib
+
+# 3. (Opcional) Cargar datos de ejemplo
 python cargar_datos_ejemplo.py
 
-# 3. Ejecutar la aplicación
+# 4. Ejecutar la aplicación
 python src/main.py
 ```
 

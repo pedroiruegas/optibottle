@@ -223,5 +223,33 @@ class Database:
         """)
         return [dict(row) for row in cursor.fetchall()]
 
+    def produccion_por_orden(self):
+        """Devuelve buenas y defectuosas agrupadas por orden."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT o.codigo,
+                   COALESCE(SUM(r.unidades_buenas), 0) as buenas,
+                   COALESCE(SUM(r.unidades_defectuosas), 0) as defectuosas
+            FROM ordenes_produccion o
+            LEFT JOIN registros_produccion r ON o.id = r.orden_id
+            GROUP BY o.id, o.codigo
+            HAVING (buenas + defectuosas) > 0
+            ORDER BY o.codigo
+        """)
+        return [dict(row) for row in cursor.fetchall()]
+
+    def produccion_por_fecha(self):
+        """Devuelve totales de producción agrupados por fecha."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT fecha,
+                   SUM(unidades_buenas) as buenas,
+                   SUM(unidades_defectuosas) as defectuosas
+            FROM registros_produccion
+            GROUP BY fecha
+            ORDER BY fecha
+        """)
+        return [dict(row) for row in cursor.fetchall()]
+
     def cerrar(self):
         self.conn.close()
